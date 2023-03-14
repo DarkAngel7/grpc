@@ -17,6 +17,10 @@ communicate transparently, and simplifies the building of connected systems.
 
 [![Join the chat at https://gitter.im/grpc/grpc](https://badges.gitter.im/grpc/grpc.svg)](https://gitter.im/grpc/grpc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+## Build
+
+To build what you want in different folders that contain a `BUILD` file, simply use `bazel build xxx` command in each of those folders.
+
 ## To start using gRPC
 
 To maximize usability, gRPC supports the standard method for adding dependencies
