@@ -24,6 +24,8 @@
 #include "src/compiler/csharp_generator.h"
 #include "src/compiler/csharp_generator_helpers.h"
 
+using google::protobuf::compiler::csharp::GetOutputFile;
+
 class CSharpGrpcGenerator : public grpc::protobuf::compiler::CodeGenerator {
  public:
   CSharpGrpcGenerator() {}
@@ -43,6 +45,8 @@ class CSharpGrpcGenerator : public grpc::protobuf::compiler::CodeGenerator {
     bool generate_client = true;
     bool generate_server = true;
     bool internal_access = false;
+    bool generate_directories = false;
+    std::string base_namespace = "";
     // the suffix that will get appended to the name generated from the name
     // of the original .proto file
     std::string file_suffix = "Grpc.cs";
@@ -53,7 +57,10 @@ class CSharpGrpcGenerator : public grpc::protobuf::compiler::CodeGenerator {
         generate_server = false;
       } else if (options[i].first == "internal_access") {
         internal_access = true;
-      } else if (options[i].first == "file_suffix") {
+      } else if (options[i].first == "base_namespace") {
+        base_namespace = options[i].second;
+        generate_directories = true;
+      } else if (options[i].first == "file_suffix") { // must send this param with `base_namespace`
         file_suffix = options[i].second;
       } else {
         *error = "Unknown generator option: " + options[i].first;
@@ -67,12 +74,13 @@ class CSharpGrpcGenerator : public grpc::protobuf::compiler::CodeGenerator {
       return true;  // don't generate a file if there are no services
     }
 
-    // Get output file name.
-    std::string file_name;
-    if (!grpc_csharp_generator::ServicesFilename(file, file_suffix,
-                                                 file_name)) {
-      return false;
+    // Get output file name with the help of the protobuf helper. We hack it a bit
+    // by giving something that is not exactly an extension but it works perfectly like this.
+    std::string file_name = GetOutputFile(file, file_suffix, generate_directories, base_namespace, error);
+    if (file_name.empty()) {
+      return false; 
     }
+
     std::unique_ptr<grpc::protobuf::io::ZeroCopyOutputStream> output(
         context->Open(file_name));
     grpc::protobuf::io::CodedOutputStream coded_out(output.get());
